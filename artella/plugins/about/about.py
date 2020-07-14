@@ -154,7 +154,7 @@ class AboutDialog(artella.Dialog, object):
                 self._plugins_tree.addTopLevelItem(package_item)
                 added_packages[plugin_package] = package_item
             plugin_name = plugin_data['name']
-            plugin_version = plugin_data['version']
+            plugin_version = plugin_data.get('version', 'Undefined')
             plugin_item = QtWidgets.QTreeWidgetItem([plugin_name, plugin_version, plugin_id])
             package_item.addChild(plugin_item)
 
