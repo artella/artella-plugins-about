@@ -23,7 +23,7 @@ logger = logging.getLogger('artella')
 class AboutPlugin(plugin.ArtellaPlugin, object):
 
     ID = 'artella-plugins-about'
-    INDEX = 6
+    INDEX = 101
 
     def __init__(self, config_dict=None, manager=None):
         super(AboutPlugin, self).__init__(config_dict=config_dict, manager=manager)
