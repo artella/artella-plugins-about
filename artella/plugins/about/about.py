@@ -55,18 +55,6 @@ class AboutDialog(artella.Dialog, object):
     def setup_ui(self):
         super(AboutDialog, self).setup_ui()
 
-        artella_frame = QtWidgets.QFrame()
-        artella_frame_layout = QtWidgets.QHBoxLayout()
-        artella_frame.setLayout(artella_frame_layout)
-        artella_frame.setStyleSheet('background: rgb(23, 165, 151)')
-
-        artella_header = QtWidgets.QLabel()
-        artella_header_pixmap = artella.ResourcesMgr().pixmap('artella_header')
-        artella_header.setPixmap(artella_header_pixmap)
-        artella_frame_layout.addStretch()
-        artella_frame_layout.addWidget(artella_header)
-        artella_frame_layout.addStretch()
-
         core_layout = QtWidgets.QHBoxLayout()
         core_layout.setContentsMargins(2, 2, 2, 2)
         core_layout.setSpacing(2)
@@ -99,7 +87,6 @@ class AboutDialog(artella.Dialog, object):
         self._plugins_tree.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self._plugins_tree.setVisible(False)
 
-        self.main_layout.addWidget(artella_frame)
         self.main_layout.addStretch()
         self.main_layout.addLayout(core_layout)
         self.main_layout.addLayout(dcc_layout)
