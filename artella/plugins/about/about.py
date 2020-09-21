@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 import logging
 
 import artella
-from artella import dcc
+import artella.dcc as dcc
 from artella.core import dcc as core_dcc
 from artella.core import plugin, utils, qtutils
 
@@ -55,23 +55,15 @@ class AboutDialog(artella.Dialog, object):
     def setup_ui(self):
         super(AboutDialog, self).setup_ui()
 
-        core_layout = QtWidgets.QHBoxLayout()
-        core_layout.setContentsMargins(2, 2, 2, 2)
-        core_layout.setSpacing(2)
-        core_label = QtWidgets.QLabel('Artella Core version: ')
-        self._artella_core_version_label = QtWidgets.QLabel()
-        core_layout.addWidget(core_label)
-        core_layout.addWidget(self._artella_core_version_label)
-        core_layout.addStretch()
-
-        dcc_layout = QtWidgets.QHBoxLayout()
-        dcc_layout.setContentsMargins(2, 2, 2, 2)
-        dcc_layout.setSpacing(2)
-        self._artella_dcc_label = QtWidgets.QLabel()
-        self._artella_dcc_version_label = QtWidgets.QLabel()
-        dcc_layout.addWidget(self._artella_dcc_label)
-        dcc_layout.addWidget(self._artella_dcc_version_label)
-        dcc_layout.addStretch()
+        version_layout = QtWidgets.QHBoxLayout()
+        version_layout.setContentsMargins(2, 2, 2, 2)
+        version_layout.setSpacing(2)
+        version_label = QtWidgets.QLabel('Version: '.format(dcc.nice_name()))
+        self._artella_dcc_plugin_version_label = QtWidgets.QLabel()
+        version_layout.addStretch()
+        version_layout.addWidget(version_label)
+        version_layout.addWidget(self._artella_dcc_plugin_version_label)
+        version_layout.addStretch()
 
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.setContentsMargins(2, 2, 2, 2)
@@ -88,8 +80,7 @@ class AboutDialog(artella.Dialog, object):
         self._plugins_tree.setVisible(False)
 
         self.main_layout.addStretch()
-        self.main_layout.addLayout(core_layout)
-        self.main_layout.addLayout(dcc_layout)
+        self.main_layout.addLayout(version_layout)
         self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch()
         self.main_layout.addLayout(button_layout)
@@ -99,37 +90,10 @@ class AboutDialog(artella.Dialog, object):
         self._show_plugins_btn.clicked.connect(self._on_toggle_plugins_visibility)
 
     def _fill_data(self):
+        current_plugin_version = artella.DccPlugin().get_version() or 'Undefined'
+        self._artella_dcc_plugin_version_label.setText(current_plugin_version)
+
         added_packages = dict()
-
-        # Retrieve Artella core version
-        core_version = None
-        core_version_path = 'artella.__version__'
-        try:
-            core_version_mod = utils.import_module(core_version_path)
-            core_version = core_version_mod.get_version()
-        except Exception as exc:
-            logger.warning('Impossible to retrieve Artella Core version: {}'.format(exc))
-        if core_version:
-            self._artella_core_version_label.setText(core_version)
-        else:
-            self._artella_core_version_label.setText('Undefined')
-
-        # Retrieve DCC plugin version
-        dcc_name = dcc.name()
-        self._artella_dcc_label.setText('Artella {} Version: '.format(dcc_name.title()))
-        dcc_version = None
-        dcc_module_name = core_dcc.CURRENT_DCC_MODULE
-        if dcc_module_name:
-            try:
-                dcc_module_version = '{}.__version__'.format(dcc_module_name)
-                dcc_version_mod = utils.import_module(dcc_module_version)
-                dcc_version = dcc_version_mod.get_version()
-            except Exception as exc:
-                logger.warning('Impossible to retrieve DCC Artella plugin version: {}'.format(exc))
-        if dcc_version:
-            self._artella_dcc_version_label.setText(dcc_version)
-        else:
-            self._artella_dcc_version_label.setText('Undefined')
 
         # Retrieve Artella plugins versions
         plugins = artella.PluginsMgr().plugins
@@ -144,6 +108,37 @@ class AboutDialog(artella.Dialog, object):
             plugin_version = plugin_data.get('version', 'Undefined')
             plugin_item = QtWidgets.QTreeWidgetItem([plugin_name, plugin_version, plugin_id])
             package_item.addChild(plugin_item)
+
+        package_item = added_packages.get('Artella', None)
+        if not package_item:
+            package_item = QtWidgets.QTreeWidgetItem(['Artella'])
+            self._plugins_tree.addTopLevelItem(package_item)
+
+        # Retrieve DCC plugin version
+        dcc_version = None
+        dcc_module_name = core_dcc.CURRENT_DCC_MODULE
+        if dcc_module_name:
+            try:
+                dcc_module_version = '{}.__version__'.format(dcc_module_name)
+                dcc_version_mod = utils.import_module(dcc_module_version)
+                dcc_version = dcc_version_mod.get_version()
+            except Exception as exc:
+                logger.warning('Impossible to retrieve {} Artella plugin version: {}'.format(dcc.name(), exc))
+        dcc_version = dcc_version or 'Undefined'
+        dcc_version_item = QtWidgets.QTreeWidgetItem([dcc.nice_name(), dcc_version, dcc_module_name.replace('.', '- ')])
+        package_item.insertChild(0, dcc_version_item)
+
+        # Retrieve Artella core version
+        core_version = None
+        core_version_path = 'artella.__version__'
+        try:
+            core_version_mod = utils.import_module(core_version_path)
+            core_version = core_version_mod.get_version()
+        except Exception as exc:
+            logger.warning('Impossible to retrieve Artella Core version: {}'.format(exc))
+        core_version = core_version or 'Undefined'
+        core_version_item = QtWidgets.QTreeWidgetItem(['Core', core_version, 'artella-plugins-core'])
+        package_item.insertChild(0, core_version_item)
 
         self._plugins_tree.expandAll()
         self._plugins_tree.resizeColumnToContents(0)
