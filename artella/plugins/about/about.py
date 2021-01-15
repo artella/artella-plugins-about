@@ -9,9 +9,9 @@ from __future__ import print_function, division, absolute_import
 
 import logging
 
-import artella
-import artella.dcc as dcc
-from artella.core import dcc as core_dcc
+from artella import dcc
+from artella.core.dcc import dialog
+from artella.core import plugins, dccplugin, dcc as core_dcc
 from artella.core import plugin, utils, qtutils
 
 if qtutils.QT_AVAILABLE:
@@ -37,7 +37,7 @@ class AboutPlugin(plugin.ArtellaPlugin, object):
         about_dialog.exec_()
 
 
-class AboutDialog(artella.Dialog, object):
+class AboutDialog(dialog.Dialog(), object):
     def __init__(self, parent=None, **kwargs):
         super(AboutDialog, self).__init__(parent, **kwargs)
 
@@ -90,14 +90,14 @@ class AboutDialog(artella.Dialog, object):
         self._show_plugins_btn.clicked.connect(self._on_toggle_plugins_visibility)
 
     def _fill_data(self):
-        current_plugin_version = artella.DccPlugin().get_version() or 'Undefined'
+        current_plugin_version = dccplugin.DccPlugin().get_version() or 'Undefined'
         self._artella_dcc_plugin_version_label.setText(current_plugin_version)
 
         added_packages = dict()
 
         # Retrieve Artella plugins versions
-        plugins = artella.PluginsMgr().plugins
-        for plugin_id, plugin_data in plugins.items():
+        all_plugins = plugins.plugins()
+        for plugin_id, plugin_data in all_plugins.items():
             plugin_package = plugin_data.get('package', 'Not Defined')
             package_item = added_packages.get(plugin_package, None)
             if not package_item:
